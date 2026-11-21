@@ -1,0 +1,88 @@
+# ---------------------------------------------------------------------------
+# Secrets & local environment (NEVER commit real credentials)
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+kafka-ssl/
+secrets/
+
+# ---------------------------------------------------------------------------
+# Python / uv
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Data, lakehouse & ML artifacts (live in R2 / MinIO, never in git)
+# ---------------------------------------------------------------------------
+data/
+*.parquet
+*.duckdb
+*.duckdb.wal
+mlruns/
+mlartifacts/
+*.joblib
+*.pkl
+evidently_reports/
+
+# dbt
+pipelines/dbt/target/
+pipelines/dbt/dbt_packages/
+pipelines/dbt/logs/
+pipelines/dbt/.user.yml
+
+# ---------------------------------------------------------------------------
+# Node / Next.js (apps/web)
+# ---------------------------------------------------------------------------
+node_modules/
+.next/
+out/
+.vercel/
+.wrangler/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+
+# ---------------------------------------------------------------------------
+# Infra / IaC
+# ---------------------------------------------------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+infra/docker/.data/
+
+# ---------------------------------------------------------------------------
+# OS / editors
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.log
