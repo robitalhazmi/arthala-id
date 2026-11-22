@@ -24,10 +24,12 @@ bootstrap:
 
 # --- Local sandbox (Postgres 16 + MinIO + Redpanda) --------------------------
 
-# Start the offline local sandbox
+# Start the offline local sandbox, then run the idempotent bucket/topic init jobs
 [group('sandbox')]
 up:
-    {{ compose_local }} up -d --wait
+    {{ compose_local }} up -d --wait postgres minio redpanda redpanda-console
+    {{ compose_local }} run --rm minio-init
+    {{ compose_local }} run --rm redpanda-init
 
 # Stop the local sandbox (keeps volumes)
 [group('sandbox')]
