@@ -6,8 +6,7 @@
 ---
 
 ## Phase 0: Repository Governance, Cloud Free Tiers & Antigravity Local Dev
-- [ ] **0.1 GitHub Repo Bootstrap:** Create public repository `arthala-id`, configure `main` branch protection rules, squash-merge only, `CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, `ISSUE_TEMPLATE/`, and `dependabot.yml`.
-  - *Progress:* public repo `robitalhazmi/arthala-id` created and governance files (`CODEOWNERS`, PR/issue templates, `dependabot.yml`) committed; pending `main` branch protection & squash-merge settings.
+- [x] **0.1 GitHub Repo Bootstrap:** Create public repository `arthala-id`, configure `main` branch protection rules, squash-merge only, `CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, `ISSUE_TEMPLATE/`, and `dependabot.yml`.
 - [x] **0.2 Monorepo Skeleton & Tooling:** Initialize `uv` Python 3.12 workspace (`pyproject.toml`), `ruff`, `mypy`, `pytest`, `.pre-commit-config.yaml`, `Justfile`, and `.env.example`.
 - [x] **0.3 Local Sandbox Compose:** Create `infra/docker/docker-compose.local.yml` with local Postgres 16, MinIO (S3/R2 emulator), and Redpanda (single-node Kafka emulator) so all development works offline in Antigravity IDE.
 - [ ] **0.4 Provision Free Cloud Services:**
