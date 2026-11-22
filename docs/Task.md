@@ -17,7 +17,7 @@
   - [x] **Grafana Cloud Free** stack (`prometheus-prod-52-prod-ap-southeast-2.grafana.net` & `logs-prod-032.grafana.net/loki/api/v1/push`, no credit card) + verified live Loki `204` log push & Prometheus remote-write auth and stored credentials in GitHub Actions Secrets (`GRAFANA_*`).
   - [x] **Telegram Bot** via `@BotFather` (`@ArthalaIDBot`, no credit card) + verified live via Telegram `getMe`, configured bot description/commands, and stored `TELEGRAM_BOT_TOKEN` in GitHub Actions Secrets.
   - [ ] **Mayar.id** individual account (no credit card; Indonesian KTP/local bank) + create **Arthala ID Pro** monthly Payment Link (Rp39.000) + webhook secret.
-- [ ] **0.5 Harden Coolify VPS (1 vCPU / 2 GB):** Enable 2 GB Linux swap file, verify Coolify dashboard health, and configure GitHub App deployment link.
+- [x] **0.5 Harden Coolify VPS (1 vCPU / 2 GB):** Enable 2 GB Linux swap file, verify Coolify dashboard health, and configure GitHub App deployment link (`infra/coolify/harden-vps.sh` + `pipelines/ingestion/vps_audit.py` + `just vps-audit`).
 - [x] **0.6 Baseline CI Pipeline:** Add `.github/workflows/ci.yml` (Python lint/type/test + Next.js lint/build + gitleaks) and verify first green PR.
 
 ---

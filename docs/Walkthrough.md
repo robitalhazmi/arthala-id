@@ -113,10 +113,13 @@ Configure each no-credit-card forever-free tier and store all secrets in **GitHu
 
 ## Step 3: Prepare Your 1 vCPU / 2 GB Coolify VPS
 
-Before deploying any container, protect the VPS from OOM spikes by adding a 2 GB swap file:
+Before deploying any container, protect the VPS from OOM spikes by running the idempotent hardening script (`infra/coolify/harden-vps.sh`) on your Coolify host (or executing the commands below manually):
 
 ```bash
-# SSH into your Coolify VPS
+# SSH into your Coolify VPS and run the repository hardening script:
+sudo bash infra/coolify/harden-vps.sh
+
+# Or run the underlying commands directly:
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -125,6 +128,11 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 echo 'vm.swappiness=20' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 free -h
+```
+
+You can audit the 2 GB VPS memory caps (`450m + 250m + 100m <= 800m`), host swap, and Coolify `/api/health` endpoint locally or in CI anytime via:
+```bash
+just vps-audit
 ```
 
 ### Deploy Backend Services via Coolify

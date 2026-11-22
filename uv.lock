@@ -50,8 +50,10 @@ dev = [
     { name = "pydantic-settings" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "structlog" },
+    { name = "types-pyyaml" },
 ]
 pipelines = [
     { name = "boto3" },
@@ -63,6 +65,7 @@ pipelines = [
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pyyaml" },
     { name = "structlog" },
 ]
 
@@ -84,8 +87,10 @@ dev = [
     { name = "pydantic-settings", specifier = ">=2.16.3" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "pyyaml", specifier = ">=6.0.4" },
     { name = "ruff", specifier = ">=0.17.6" },
     { name = "structlog", specifier = ">=26.1.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20261113" },
 ]
 pipelines = [
     { name = "boto3", specifier = ">=1.44.9" },
@@ -97,6 +102,7 @@ pipelines = [
     { name = "pyarrow", specifier = ">=26.0.1" },
     { name = "pydantic", specifier = ">=2.14.4" },
     { name = "pydantic-settings", specifier = ">=2.16.3" },
+    { name = "pyyaml", specifier = ">=6.0.4" },
     { name = "structlog", specifier = ">=26.1.0" },
 ]
 
@@ -776,6 +782,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/67/2e/ff27b371f3262048aa7b2a391f655a333e75a7774a920d5fc9e257a47991/typeguard-4.6.1.tar.gz", hash = "sha256:d94fd3552c5feb6bada6e8bb1167d9916c08d7442141aeb041b847ba9bd1afb1", size = 84528, upload-time = "2026-11-20T01:16:02.285Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/d5/ab99dd595bd3cc307346c9c644556b627ca0bd273d3ee23041e8ac4f20dd/typeguard-4.6.1-py3-none-any.whl", hash = "sha256:aca1f365124873d5325b18aad1a3689d62f7184abe32d899413562cf51729d02", size = 37095, upload-time = "2026-11-20T01:16:01.153Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20261113"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/8b/ba599d956693dbc98e170f32097128bdea0a17f9d42b0b490fa749c12b1a/types_pyyaml-6.0.12.20261113.tar.gz", hash = "sha256:0828be2580fd94151182364f4d0158e4de62fdbeeb8d4296f7f7d2b6c22bb640", size = 19017, upload-time = "2026-11-13T08:51:21.488Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fd/2e/36fc0941a40ef066dbc8abac41bbbefb41389f547c779aef832aea6b873d/types_pyyaml-6.0.12.20261113-py3-none-any.whl", hash = "sha256:3600749e613748afdc4327f0b17c3296cf880cdbc7335f320007abd9dd815f67", size = 21321, upload-time = "2026-11-13T08:51:20.417Z" },
 ]
 
 [[package]]
