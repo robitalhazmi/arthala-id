@@ -22,4 +22,4 @@ Perform a final senior-engineer self-review before opening a Pull Request into `
 
 4. **Draft PR Title & Body:**
    - Propose a **Conventional Commit** PR title (e.g., `feat(api): add screener filtering and live distress inference endpoint`).
-   - Output a ready-to-paste PR description matching `.github/PULL_REQUEST_TEMPLATE.md` (Summary, OCBC Pillar/Task Reference, Verification Evidence, and VPS Resource Impact).
+   - Output a ready-to-paste PR description matching `.github/PULL_REQUEST_TEMPLATE.md` (Summary, Engineering Pillar/Task Reference, Verification Evidence, and VPS Resource Impact).

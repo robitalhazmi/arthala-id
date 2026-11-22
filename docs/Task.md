@@ -52,7 +52,7 @@
   - [ ] `GET /health` & `GET /metrics` (Prometheus metrics via `prometheus-fastapi-instrumentator`).
   - [ ] `GET /v1/screener` (filtering, sorting, pagination backed by Neon indexes).
   - [ ] `GET /v1/tickers/{symbol}` (price series, quarterly financials, ratios, SHAP Top-3 EN/ID).
-  - [ ] `POST /v1/predict/distress` (live on-demand LightGBM + SHAP inference endpoint for OCBC API serving proof).
+  - [ ] `POST /v1/predict/distress` (live on-demand LightGBM + SHAP inference endpoint for production API serving proof).
   - [ ] `GET /v1/watchlist`, `POST /v1/watchlist`, `DELETE /v1/watchlist/{symbol}` + `GET /v1/dividends/calendar`.
   - [ ] `GET /v1/status` (pipeline runs, quarantine counts, active MLflow model version, drift status).
 - [ ] **3.2 Mayar.id QRIS Webhook & Subscription State Machine:**
@@ -81,11 +81,11 @@
 ## Phase 5: Coolify Production Deploy, Observability & Enterprise IaC Showcase
 - [ ] **5.1 Production Coolify Deployment:** Configure `infra/coolify/docker-compose.prod.yml` with strict memory limits (`arthala-api: 450m`, `arthala-worker: 250m`, `grafana-alloy: 100m`), deploy via Coolify with Traefik HTTPS, and verify `< 1.1 GB` total VPS RAM usage under load.
 - [ ] **5.2 Grafana Cloud Observability:** Configure Grafana Alloy to ship FastAPI latency/error rates, Kafka consumer lag, and container memory metrics to Grafana Cloud; create a 1-page SRE dashboard.
-- [ ] **5.3 Enterprise OCBC Infrastructure Showcase (`/infra` & `/pipelines/airflow`):**
+- [ ] **5.3 Enterprise Infrastructure Showcase (`/infra` & `/pipelines/airflow`):**
   - [ ] Write Terraform configs (`infra/terraform/`) documenting Cloudflare R2, Neon, and Aiven resources.
   - [ ] Write Helm / k3s manifests (`infra/k8s/`) with HPA and resource quotas for `arthala-api` and `arthala-worker`.
   - [ ] Add portable Airflow DAGs (`pipelines/airflow/`) mirroring the GitHub Actions ETL/ML orchestration.
-- [ ] **5.4 Portfolio Polish:** Write a crisp `README.md` for **Arthala ID by Robit Al Hazmi** featuring Mermaid architecture diagram, live links, OCBC Job-Requirement Traceability Matrix, screenshots, and a 3-minute demo video/GIF.
+- [ ] **5.4 Portfolio Polish:** Write a crisp `README.md` for **Arthala ID by Robit Al Hazmi** featuring Mermaid architecture diagram, live links, Engineering Traceability Matrix, screenshots, and a 3-minute demo video/GIF.
 
 ---
 

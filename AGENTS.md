@@ -12,11 +12,11 @@ This file is the canonical instruction manual for **Google Antigravity IDE** and
 
   2. Public monetization (**Freemium Next.js Web Dashboard + Paid `@ArthalaIDBot` Telegram Alerts via Mayar.id QRIS**).
 
-  3. Production-grade engineering alignment with **Bank OCBC NISP Data Engineer** standards (Medallion Lakehouse, Kafka streaming, versioned/monitored MLOps, data quality contracts, CI/CD, and IaC).
+  3. Production-grade **Enterprise Data Engineering & MLOps** architecture (Medallion Lakehouse, Kafka streaming, versioned/monitored MLOps, data quality contracts, CI/CD, and IaC).
 
 * **Canonical Reference Docs (Do Not Duplicate — Consult Directly):**
 
-  * `docs/Implementation_Plan.md` — Architecture, Cloudflare R2 Medallion layout, Neon Postgres DDL, ML feature formulas, and OCBC traceability matrix.
+  * `docs/Implementation_Plan.md` — Architecture, Cloudflare R2 Medallion layout, Neon Postgres DDL, ML feature formulas, and engineering traceability matrix.
 
   * `docs/Task.md` — Phased engineering backlog and active checklist.
 
@@ -67,11 +67,11 @@ arthala-id/
 │   ├── dbt/         # dbt-duckdb Bronze -> Silver -> Gold marts & ML feature stores
 │   ├── ml/          # LightGBM training, MLflow registry, bilingual SHAP explainability, Evidently drift
 │   ├── replay/      # 24/7 Historical IDX tick & disclosure Kafka Replay Producer
-│   └── airflow/     # Portable Airflow DAG mirrors (OCBC orchestration showcase)
+│   └── airflow/     # Portable Airflow DAG mirrors (enterprise orchestration showcase)
 ├── infra/
 │   ├── docker/      # docker-compose.local.yml (Postgres, MinIO, Redpanda)
 │   ├── coolify/     # docker-compose.prod.yml (strict VPS memory caps)
-│   ├── k8s/         # k3s / Helm manifests (OCBC Kubernetes showcase)
+│   ├── k8s/         # k3s / Helm manifests (enterprise Kubernetes showcase)
 │   ├── terraform/   # IaC definitions for R2, Neon, Aiven
 │   └── sql/         # ddl.sql (idempotent Neon Postgres schema)
 └── docs/            # Implementation_Plan.md, Task.md, Walkthrough.md

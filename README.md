@@ -17,7 +17,7 @@
 **Arthala ID by Robit Al Hazmi** is a cloud-native Indonesian Stock Exchange (**IDX / BEI**) fundamental, dividend, and real-time risk intelligence platform built around three goals:
 
 1. **Personal IDX Investing Workflow:** Automated quarterly financial statement ingestion, annualized valuation ratios, dividend sustainability tracking, and real-time red-flag / accounting anomaly alerts.
-2. **Bank OCBC NISP Data Engineer Portfolio:** Production-grade Medallion Lakehouse (**Cloudflare R2 + DuckDB + dbt-duckdb**), strict **Pandera** schema contracts with an R2 Quarantine/DLQ, real-time **Apache Kafka** streaming (**Aiven + `aiokafka`**), and versioned/monitored MLOps (**LightGBM + bilingual SHAP + MLflow + Evidently AI**) engineered within a strict **1 vCPU / 2 GB Coolify VPS** budget.
+2. **Enterprise Data Engineering & MLOps Reference Architecture:** Production-grade Medallion Lakehouse (**Cloudflare R2 + DuckDB + dbt-duckdb**), strict **Pandera** schema contracts with an R2 Quarantine/DLQ, real-time **Apache Kafka** streaming (**Aiven + `aiokafka`**), and versioned/monitored MLOps (**LightGBM + bilingual SHAP + MLflow + Evidently AI**) engineered within a strict **1 vCPU / 2 GB Coolify VPS** budget.
 3. **Indonesia-First Public Monetization:** A bilingual (`EN | ID`) **Freemium Next.js Web Dashboard** paired with a **Paid Real-Time Telegram Alert Bot (`@ArthalaIDBot`, Rp39.000/month via Mayar.id QRIS)**.
 
 ---
@@ -83,9 +83,9 @@ flowchart LR
 
 ---
 
-## 3. Bank OCBC NISP Job-Requirement Traceability Matrix
+## 3. Enterprise Data Engineering & MLOps Traceability Matrix
 
-| Bank OCBC NISP Job Requirement | Arthala ID Implementation | Repository Location |
+| Engineering Capability | Arthala ID Implementation | Repository Location |
 |---|---|---|
 | **Scalable, low-latency ETL/ELT pipelines (Kafka, Spark/Airflow/Flink equivalents)** | Medallion Lakehouse (R2 Bronze/Silver/Gold via DuckDB + dbt-duckdb) orchestrated via GitHub Actions + portable Airflow DAGs; real-time Kafka streaming via Aiven + `aiokafka` + 24/7 Historical Market Replay Producer. | [`/pipelines/ingestion`](pipelines/ingestion), [`/pipelines/dbt`](pipelines/dbt), [`/pipelines/replay`](pipelines/replay), [`/pipelines/airflow`](pipelines/airflow) |
 | **Integrate ML models into production via APIs, microservices & containers** | Versioned LightGBM + SHAP models loaded from MLflow/R2 into containerized FastAPI inference microservice (`POST /v1/predict/distress`, `GET /v1/tickers/{symbol}/score`). | [`/apps/api`](apps/api), [`/infra/docker`](infra/docker) |
@@ -153,11 +153,11 @@ arthala-id/
 │   ├── dbt/                    # dbt-duckdb Bronze -> Silver -> Gold marts & ML feature stores
 │   ├── ml/                     # LightGBM training, MLflow registry, bilingual SHAP explainability, Evidently drift
 │   ├── replay/                 # 24/7 Historical IDX tick & disclosure Kafka Replay Producer
-│   └── airflow/                # Portable Airflow DAG mirrors (OCBC orchestration showcase)
+│   └── airflow/                # Portable Airflow DAG mirrors (enterprise orchestration showcase)
 ├── infra/
 │   ├── docker/                 # docker-compose.local.yml (offline Postgres 16, MinIO, Redpanda)
 │   ├── coolify/                # docker-compose.prod.yml (strict VPS memory caps)
-│   ├── k8s/                    # k3s / Helm manifests (OCBC Kubernetes showcase)
+│   ├── k8s/                    # k3s / Helm manifests (enterprise Kubernetes showcase)
 │   ├── terraform/              # IaC definitions for Cloudflare R2, Neon, Aiven
 │   └── sql/ddl.sql             # Idempotent Neon Postgres serving schema
 ├── docs/                       # Implementation_Plan.md, Task.md, Walkthrough.md
@@ -201,7 +201,7 @@ just down
 - [`AGENTS.md`](AGENTS.md) — Engineering standards, 2 GB VPS guardrails, and Antigravity IDE agent workflow.
 - [`docs/Implementation_Plan.md`](docs/Implementation_Plan.md) — System architecture, R2 Medallion layout, Neon DDL, and ML formulations.
 - [`docs/Task.md`](docs/Task.md) — Master phased engineering checklist.
-- [`docs/Walkthrough.md`](docs/Walkthrough.md) — Local sandbox setup, zero-cost cloud provisioning, Coolify deploy, and 3-minute OCBC interview demo script.
+- [`docs/Walkthrough.md`](docs/Walkthrough.md) — Local sandbox setup, zero-cost cloud provisioning, Coolify deploy, and 3-minute live system walkthrough script.
 
 ---
 
