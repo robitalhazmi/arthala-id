@@ -107,7 +107,7 @@ flowchart LR
 | **Frontend Web App** | Next.js (App Router, TypeScript, Tailwind CSS, TradingView Lightweight Charts, `EN \| ID`) | **Cloudflare Pages / Vercel** (Free Tier — `0 MiB` on VPS) |
 | **Backend API & ML Serving** | Python 3.12 (`uv`), FastAPI, Uvicorn (`--workers 1`), Pydantic v2, LightGBM, SHAP | **Coolify VPS** (`arthala-api`, `mem_limit: 450m`) |
 | **Streaming & Alert Worker** | Aiven for Apache Kafka + Python `aiokafka` + `python-telegram-bot` (`@ArthalaIDBot`) | **Aiven Free** + **Coolify VPS** (`arthala-worker`, `mem_limit: 250m`) |
-| **Lakehouse Storage** | Cloudflare R2 (S3-compatible Parquet: `bronze/`, `silver/`, `gold/`, `quarantine/`, `mlflow-artifacts/`) | **Cloudflare R2** (10 GB Free, zero egress) |
+| **Lakehouse Storage** | S3-Compatible Parquet (`bronze/`, `silver/`, `gold/`, `quarantine/`, `mlflow-artifacts/`) | **Backblaze B2 Free (10 GB, no credit card)** / **Supabase S3** / **Cloudflare R2** |
 | **Batch Compute & Transform** | DuckDB + `dbt-duckdb` + Pandera data quality contracts | **GitHub Actions** (Scheduled Cron Runners) |
 | **Serving Database (OLTP)** | Neon Serverless Postgres (marts, watchlists, auth, Mayar billing, pipeline watermarks) | **Neon Free** |
 | **MLOps & Drift Monitoring** | MLflow Registry + Evidently AI | **GitHub Actions** + R2/Neon |

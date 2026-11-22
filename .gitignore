@@ -86,3 +86,4 @@ Thumbs.db
 !.vscode/extensions.json
 *.swp
 *.log
+.neon

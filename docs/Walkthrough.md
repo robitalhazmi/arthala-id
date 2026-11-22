@@ -80,22 +80,23 @@ check:
 
 ---
 
-## Step 2: Provision Zero-Cost Cloud Services
+## Step 2: Provision Zero-Cost Cloud Services (100% No Credit Card Required)
 
-Configure each free tier and store all secrets in **GitHub Repository Secrets** (for Actions ETL/ML) and **Coolify Environment Variables** (for `arthala-api` and `arthala-worker`):
+Configure each no-credit-card forever-free tier and store all secrets in **GitHub Repository Secrets** (for Actions ETL/ML) and **Coolify Environment Variables** (for `arthala-api` and `arthala-worker`):
 
-1. **Cloudflare R2 (Lakehouse & ML Artifacts):**
-   - Create bucket `arthala-lakehouse`.
-   - Create an R2 API Token with Object Read & Write permissions.
-   - Save `R2_ENDPOINT_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET=arthala-lakehouse`.
-2. **Neon Postgres (OLTP & Serving):**
-   - Create project `arthala-prod` (Singapore `ap-southeast-1` region for lowest latency to Indonesia).
-   - Run `infra/sql/ddl.sql` against the pooled connection string.
-   - Save `DATABASE_URL` (with `sslmode=require`).
-3. **Aiven for Apache Kafka (Free Tier Streaming):**
-   - Create Free Kafka service in `ap-southeast-1` (Singapore).
-   - Create topics: `idx.ticks.raw`, `idx.disclosures.raw`, `alerts.dispatch`, `user.subscription.updated`.
-   - Download/store SSL credentials (`KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_SSL_CA`, `KAFKA_SSL_CERT`, `KAFKA_SSL_KEY`).
+1. **S3-Compatible Lakehouse & ML Artifacts (Backblaze B2 10 GB Free — No Credit Card):**
+   - *Why Backblaze B2 / Supabase S3:* Cloudflare R2 requires a payment method on file to activate, whereas **Backblaze B2** provides **10 GB forever-free storage + 30 GB/mo free egress** with **no credit card required** for private buckets (and speaks the exact same S3 API used by `R2_*` env vars).
+   - Sign up at Backblaze B2 (email only, no credit card) -> Create a **Private** bucket named `arthala-lakehouse`.
+   - Copy your bucket's S3 Endpoint (`https://s3.us-east-005.backblazeb2.com`) and region (`us-east-005`).
+   - Go to **Application Keys** -> **Add a New Application Key** (`arthalaKey`) with Read & Write access to `arthala-lakehouse`.
+   - Save `R2_ENDPOINT_URL=https://s3.us-east-005.backblazeb2.com`, `R2_ACCESS_KEY_ID` (`keyID`), `R2_SECRET_ACCESS_KEY` (`applicationKey`), `R2_BUCKET=arthala-lakehouse`, and `R2_REGION=us-east-005` in GitHub Secrets and local untracked `.env.prod`.
+2. **Neon Postgres (OLTP & Serving — No Credit Card):**
+   - Sign up with GitHub (no credit card) and create project `arthala-prod` (Singapore `ap-southeast-1` region for lowest latency to Indonesia).
+   - Save `DATABASE_URL` (with `sslmode=require`) and run `just cloud-check prod` (which executes `infra/sql/ddl.sql` directly via Python `psycopg` without needing `psql`).
+3. **Aiven for Apache Kafka (Free Tier Streaming — No Credit Card):**
+   - Sign up with GitHub (no credit card) and create a Free Kafka service.
+   - Create the 4 topics (2 partitions each, within Aiven Free's 5-topic / 2-partition allowance): `idx.ticks.raw`, `idx.disclosures.raw`, `alerts.dispatch`, `user.subscription.updated`.
+   - Download/store SSL credentials (`KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_SECURITY_PROTOCOL=SSL`, `KAFKA_SSL_CA`, `KAFKA_SSL_CERT`, `KAFKA_SSL_KEY`).
 4. **Telegram Bot (`@BotFather`):**
    - Message `@BotFather` -> `/newbot` -> set name `Arthala ID` and handle `@ArthalaIDBot`.
    - Set bot description to *"Arthala ID by Robit Al Hazmi — Real-time IDX fundamental, dividend & anomaly alerts."*

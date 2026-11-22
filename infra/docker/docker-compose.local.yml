@@ -27,7 +27,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:18.6-alpine
+    image: postgres:16.16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-arthala}
@@ -121,7 +121,7 @@ services:
           if rpk topic describe "$$topic" -X brokers=redpanda:29092 >/dev/null 2>&1; then
             echo "topic $$topic already exists"
           else
-            rpk topic create "$$topic" --partitions 3 --replicas 1 -X brokers=redpanda:29092
+            rpk topic create "$$topic" --partitions 2 --replicas 1 -X brokers=redpanda:29092
           fi
         done
     restart: "no"

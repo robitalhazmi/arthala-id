@@ -35,3 +35,7 @@ updates:
       timezone: "Asia/Jakarta"
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      # AGENTS.md §2.3 pins local sandbox to Postgres 16
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
