@@ -67,6 +67,10 @@ pretty = true
 show_error_codes = true
 exclude = ["^apps/web/", "^pipelines/dbt/"]
 
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "pyarrow.*"]
+ignore_missing_imports = true
+
 # -----------------------------------------------------------------------------
 # Pytest + coverage
 # -----------------------------------------------------------------------------
@@ -89,9 +93,21 @@ exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
 
 [dependency-groups]
 dev = [
+    { include-group = "pipelines" },
     "mypy>=2.4.1",
+    "pandas-stubs>=3.1.0.261029",
     "pre-commit>=4.7.0",
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.17.6",
+]
+pipelines = [
+    "boto3>=1.44.9",
+    "pandas>=3.1.1",
+    "pandera>=0.36.0",
+    "prometheus-client>=0.26.0",
+    "pyarrow>=26.0.1",
+    "pydantic>=2.14.4",
+    "pydantic-settings>=2.16.3",
+    "structlog>=26.1.0",
 ]

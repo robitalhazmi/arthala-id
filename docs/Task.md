@@ -22,7 +22,7 @@
 ---
 
 ## Phase 1: Resilient Ingestion & Medallion Lakehouse (R2 + DuckDB + dbt)
-- [ ] **1.1 Pandera Data Contracts & DLQ:** Implement `pipelines/ingestion/contracts.py` (`PriceSchema`, `FinancialReportSchema`, `CorporateActionSchema`) with automatic Quarantine/DLQ writer to `r2://arthala-lakehouse/quarantine/`.
+- [x] **1.1 Pandera Data Contracts & DLQ:** Implement `pipelines/ingestion/contracts.py` (`PriceSchema`, `FinancialReportSchema`, `CorporateActionSchema`) with automatic Quarantine/DLQ writer to `r2://arthala-lakehouse/quarantine/`.
 - [ ] **1.2 Multi-Source IDX & Market Scrapers:**
   - [ ] EOD OHLCV + dividends collector (`yfinance` for `.JK` tickers with batching and retry backoff).
   - [ ] IDX quarterly financials, disclosures & Notasi Khusus (FCA) collector (`curl_cffi` primary + Playwright fallback).
