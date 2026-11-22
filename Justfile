@@ -61,6 +61,11 @@ db-init:
 cloud-check env="local":
     uv run python -m pipelines.ingestion.cloud_bootstrap --env {{ env }} --ensure-bucket
 
+# Audit Coolify 1 vCPU / 2 GB VPS memory caps, swap, and dashboard health (Task 0.5)
+[group('quality')]
+vps-audit:
+    uv run python -m pipelines.ingestion.vps_audit
+
 # Open a psql shell on LOCAL Postgres
 [group('sandbox')]
 psql:
