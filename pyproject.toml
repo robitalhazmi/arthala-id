@@ -2,7 +2,7 @@
 name = "arthala-id"
 version = "0.1.0"
 description = "Arthala ID by Robit Al Hazmi — IDX Fundamental, Dividend & MLOps Intelligence Platform"
-readme = "docs/Implementation_Plan.md"
+readme = "README.md"
 authors = [{ name = "Robit Al Hazmi", email = "robitalhazmi@gmail.com" }]
 license = { text = "MIT" }
 requires-python = ">=3.12,<3.13"
