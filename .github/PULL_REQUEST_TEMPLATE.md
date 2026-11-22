@@ -2,10 +2,10 @@
 
 <!-- What does this PR change and why? Keep it scoped to one Task.md item. -->
 
-## Task / OCBC Pillar Reference
+## Task / Engineering Pillar Reference
 
 - Task: `docs/Task.md` → **X.Y** <!-- e.g. 1.1 Pandera Data Contracts & DLQ -->
-- OCBC pillar: <!-- e.g. Data quality & observability / MLOps / Streaming / IaC -->
+- Engineering pillar: <!-- e.g. Data quality & observability / MLOps / Streaming / IaC -->
 
 ## Changes
 

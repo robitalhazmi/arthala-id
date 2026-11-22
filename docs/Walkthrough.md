@@ -2,7 +2,7 @@
 
 > **Brand:** Arthala ID — *by Robit Al Hazmi* (`arthala-id` / `@ArthalaIDBot`)
 
-This guide walks you step by step from an empty folder in **Antigravity IDE** to a live, monetizable IDX intelligence platform deployed on your **1 vCPU / 2 GB Coolify VPS** and free cloud tiers, followed by a **Bank OCBC NISP 3-Minute Interview Demo Script**.
+This guide walks you step by step from an empty folder in **Antigravity IDE** to a live, monetizable IDX intelligence platform deployed on your **1 vCPU / 2 GB Coolify VPS** and free cloud tiers, followed by a **3-Minute System Architecture Demo Script**.
 
 ---
 
@@ -148,7 +148,7 @@ free -h
 
 ## Step 4: End-to-End Verification Runbook
 
-Before sharing **Arthala ID** publicly or attaching it to your Bank OCBC NISP application, run these 6 checks:
+Before sharing **Arthala ID** publicly or presenting it in a technical review, run these 6 checks:
 
 1. **ETL & Data Quality Proof:** Manually trigger `.github/workflows/etl_daily.yml`. Confirm Bronze/Silver/Gold Parquet files appear in `arthala-lakehouse` on R2, `dbt test` passes, intentional malformed test fixtures route to `quarantine/`, and `mart_screener_latest` updates in Neon.
 2. **MLOps Proof:** Trigger `.github/workflows/ml_retrain.yml`. Confirm MLflow logs PR-AUC/ROC-AUC metrics, registers the model to R2, updates SHAP EN/ID reasons in Neon, and generates an Evidently drift report.
@@ -164,12 +164,12 @@ Before sharing **Arthala ID** publicly or attaching it to your Bank OCBC NISP ap
 
 ---
 
-## Step 5: Bank OCBC NISP 3-Minute Interview Demo Script
+## Step 5: 3-Minute System Architecture Demo Script
 
-When an OCBC hiring manager or Senior Data Engineer asks you to walk through a production system you built, follow this exact sequence:
+When a technical reviewer or Senior Data Engineer asks you to walk through a production system you built, follow this exact sequence:
 
 1. **The Systems Problem (30 sec):** *"I built **Arthala ID**, a live Indonesian stock intelligence and anomaly alerting platform engineered under a strict zero-cost cloud-tier and 2 GB VPS constraint to prove real cost efficiency, data reliability, and end-to-end ownership."*
 2. **Medallion Lakehouse & Data Quality (45 sec):** Open `/status` on the live site and your GitHub Actions ETL run. Show how multi-source IDX ingestion enforces **Pandera schema contracts** with a **Quarantine/DLQ on Cloudflare R2**, transforms Bronze -> Silver -> Gold via **DuckDB + dbt-duckdb**, and syncs serving marts to **Neon Postgres**.
-3. **Production MLOps & Explainability (45 sec):** Open `/ticker/BBCA` (and a high-risk Notasi Khusus stock). Show the **LightGBM Financial Distress & Accounting Anomaly Score** (Altman Z, Beneish M, Accruals Ratio) with bilingual **SHAP Top-3 explanations**, backed by **MLflow** versioning and **Evidently AI** drift monitoring—explicitly connecting it to OCBC's credit scoring and fraud detection workloads.
+3. **Production MLOps & Explainability (45 sec):** Open `/ticker/BBCA` (and a high-risk Notasi Khusus stock). Show the **LightGBM Financial Distress & Accounting Anomaly Score** (Altman Z, Beneish M, Accruals Ratio) with bilingual **SHAP Top-3 explanations**, backed by **MLflow** versioning and **Evidently AI** drift monitoring—explicitly connecting it to enterprise credit scoring and fraud detection workloads.
 4. **Real-Time Streaming & Production Engineering (45 sec):** Click **Run Workflow** on `replay_demo.yml` to push real historical IDX events into **Aiven Kafka**, show the live alert arriving from `@ArthalaIDBot` via the async Coolify worker, and open **Grafana Cloud** to show container RAM, API p95 latency, and Kafka consumer metrics.
-5. **Enterprise Scalability Bridge (15 sec):** Show `/infra/k8s` and `/infra/terraform` and explain: *"Live production runs lean on Coolify and free cloud tiers to keep burn at zero, while the exact same containers and DAGs are packaged with Helm/k3s and Airflow/Terraform for horizontal enterprise scale like OCBC."*
+5. **Enterprise Scalability Bridge (15 sec):** Show `/infra/k8s` and `/infra/terraform` and explain: *"Live production runs lean on Coolify and free cloud tiers to keep burn at zero, while the exact same containers and DAGs are packaged with Helm/k3s and Airflow/Terraform for horizontal enterprise scale."*

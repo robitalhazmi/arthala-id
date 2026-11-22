@@ -1,7 +1,7 @@
 # Arthala ID — Implementation Plan & Architecture Blueprint
 
 > **Product Brand:** **Arthala ID** — *by Robit Al Hazmi* (`arthala.id` / repo: `arthala-id` / bot: `@ArthalaIDBot`)  
-> **Brand Positioning:** Combines an institutional, Indonesian-native fintech identity (*Artha* = wealth/capital, echoing the clean cadence of *Kanala ID*) with transparent, founder-led authority (*by Robit Al Hazmi*, echoing Indonesian retail-investing leaders such as *Rivan Kurniawan*, *Leon Hartono*, *Jonathan Thamrin*, *Johan Jascha*, and *Sudarsan Glory*). Zero collision with existing IDX platforms, trustworthy for retail subscribers, and sharp on a **Bank OCBC NISP** engineering portfolio.
+> **Brand Positioning:** Combines an institutional, Indonesian-native fintech identity (*Artha* = wealth/capital, echoing the clean cadence of *Kanala ID*) with transparent, founder-led authority (*by Robit Al Hazmi*, echoing Indonesian retail-investing leaders such as *Rivan Kurniawan*, *Leon Hartono*, *Jonathan Thamrin*, *Johan Jascha*, and *Sudarsan Glory*). Zero collision with existing IDX platforms, trustworthy for retail subscribers, and sharp on an enterprise data engineering & MLOps portfolio.
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Arthala ID by Robit Al Hazmi** is an open-source, cloud-native **All-in-One IDX Intelligence Platform** designed to satisfy three goals simultaneously:
 1. **Personal Investing Workflow:** Automated IDX quarterly financial report ingestion, annualized ratios, dividend sustainability tracking, and real-time red-flag / anomaly alerts.
-2. **Bank OCBC NISP Data Engineer Portfolio:** Production-grade Medallion Lakehouse, real-time Kafka streaming, versioned and monitored MLOps (LightGBM + SHAP + MLflow + Evidently), data quality contracts, CI/CD, and Infrastructure-as-Code.
+2. **Enterprise Data Engineering & MLOps Reference Architecture:** Production-grade Medallion Lakehouse, real-time Kafka streaming, versioned and monitored MLOps (LightGBM + SHAP + MLflow + Evidently), data quality contracts, CI/CD, and Infrastructure-as-Code.
 3. **Public Monetization (Indonesia-First):** A **Freemium Web Dashboard** (SEO & investor-community funnel) paired with a **Paid Real-Time Telegram Alert Bot (Rp29.000 - Rp49.000/month via Mayar.id QRIS)**.
 
 ### Tiered Feature & Monetization Model
@@ -40,7 +40,7 @@ Every component uses a free open-source market leader or a generous forever-free
 | **MLOps & Drift Monitoring** | **MLflow** (artifacts on R2, metadata on Neon) + **Evidently AI** | **GitHub Actions** + R2/Neon | Full experiment tracking, model registry, automated retraining, and data drift reports. |
 | **Payments (QRIS)** | **Mayar.id** Payment Links + HMAC-verified Webhooks | **Mayar.id** (Individual KTP friendly) | Fastest Indonesian solo-founder path to live QRIS subscriptions without a PT/CV. |
 | **Observability** | Prometheus metrics (`/metrics`), structured JSON logs (`structlog`), **Grafana Cloud** (Free Tier) | **Grafana Cloud Free** + lightweight VPS exporter | Enterprise-grade dashboards & alerts without running Grafana/Prometheus storage on VPS. |
-| **Enterprise IaC Showcase** | Docker Compose, Coolify manifests, **Kubernetes (k3s/Helm)** charts, **Terraform**, Airflow DAG blueprints | `/infra` & `/pipelines/airflow` in GitHub | Proves OCBC K8s/Airflow/IaC mastery cleanly alongside lean live Coolify deployment. |
+| **Enterprise IaC Showcase** | Docker Compose, Coolify manifests, **Kubernetes (k3s/Helm)** charts, **Terraform**, Airflow DAG blueprints | `/infra` & `/pipelines/airflow` in GitHub | Proves enterprise K8s/Airflow/IaC mastery cleanly alongside lean live Coolify deployment. |
 
 ---
 
@@ -59,11 +59,11 @@ To prevent Out-Of-Memory (OOM) kills on a 2 GB VPS, **2 GB of Linux swap** must 
 
 ---
 
-## 4. OCBC NISP Job-Requirement Traceability Matrix
+## 4. Enterprise Data Engineering & MLOps Traceability Matrix
 
-Use this matrix in your GitHub `README.md` and during technical interviews to map every job requirement directly to verifiable code in the `arthala-id` repository.
+Use this matrix in your GitHub `README.md` and during technical interviews to map every engineering capability directly to verifiable code in the `arthala-id` repository.
 
-| Bank OCBC NISP Job Requirement | Arthala ID Implementation | Repository Location |
+| Engineering Capability | Arthala ID Implementation | Repository Location |
 |---|---|---|
 | **Scalable, low-latency ETL/ELT pipelines (Kafka, Spark/Airflow/Flink equivalents)** | Medallion Lakehouse (R2 Bronze/Silver/Gold via DuckDB + dbt-duckdb) orchestrated via GitHub Actions + portable Airflow DAGs; real-time Kafka streaming via Aiven + `aiokafka` + 24/7 Historical Market Replay Producer. | `/pipelines/ingestion`, `/pipelines/dbt`, `/pipelines/replay`, `/pipelines/airflow` |
 | **Integrate ML models into production via APIs, microservices & containers** | Versioned LightGBM + SHAP models loaded from MLflow/R2 into containerized FastAPI inference microservice (`POST /v1/predict/distress`, `GET /v1/tickers/{symbol}/score`). | `/apps/api/app/ml`, `/infra/docker` |
@@ -280,9 +280,9 @@ All features are computed deterministically in `dbt-duckdb` (`gold/feat_distress
 
 | Release | Model | Type & Serving Pattern | MLOps & Business Purpose |
 |---|---|---|---|
-| **v1 (Flagship)** | **Financial Distress & Accounting Anomaly Score** | LightGBM + SHAP; batch daily scoring + on-demand `POST /v1/predict/distress` API | Establishes full end-to-end MLOps (MLflow, Evidently drift checks, CI retraining gate). Direct match to OCBC credit/fraud scoring. |
+| **v1 (Flagship)** | **Financial Distress & Accounting Anomaly Score** | LightGBM + SHAP; batch daily scoring + on-demand `POST /v1/predict/distress` API | Establishes full end-to-end MLOps (MLflow, Evidently drift checks, CI retraining gate). Direct match to enterprise credit/fraud scoring. |
 | **v1.5 (Paid Catalyst)** | **Dividend Cut & Sustainability Predictor** + **Real-Time Price/Volume & Disclosure Anomaly Classifier** | LightGBM (reuses v1 Feature Store) + Isolation Forest / Z-Score & keyword/NLP classifier on Aiven Kafka stream | Powers instant paid Telegram alerts when unusual volume spikes, earnings drops, or payout cuts occur. |
-| **v2 (Retention)** | **Personalized Stock Screener & Portfolio Risk Recommender** | Cosine similarity / ranking over user watchlist sector exposure & risk tolerance | Eliminates cold-start problem by leveraging real v1/v1.5 user watchlists; maps to OCBC customer personalization. |
+| **v2 (Retention)** | **Personalized Stock Screener & Portfolio Risk Recommender** | Cosine similarity / ranking over user watchlist sector exposure & risk tolerance | Eliminates cold-start problem by leveraging real v1/v1.5 user watchlists; maps to customer risk personalization. |
 
 ---
 
@@ -298,7 +298,7 @@ All features are computed deterministically in `dbt-duckdb` (`gold/feat_distress
 [User clicks "Upgrade Pro (Rp39.000/mo QRIS)"]
    │ 3. Next.js redirects to Mayar.id Payment Link (passing user_id/email metadata)
    ▼
-[User scans QRIS via GoPay/OVO/BCA/OCBC mobile]
+[User scans QRIS via GoPay/OVO/BCA/Mandiri mobile]
    │ 4. Mayar.id sends POST /v1/webhooks/mayar to Coolify arthala-api
    │ 5. FastAPI verifies signature, checks external_tx_id idempotency in payment_transactions,
    │    sets plan_tier='PRO' and pro_expires_at = NOW() + INTERVAL '30 days'
@@ -316,7 +316,7 @@ Every page carries a clean footer and brand mark: **Arthala ID — by Robit Al H
 1. **`/` — Public IDX Stock Screener:** Fast filterable table (Sector, PER, PBV, ROE, DER, Dividend Yield, ML Risk Tier badge) with search and bilingual `EN | ID` toggle (defaults to `EN` for recruiters; remembers preference in `localStorage`).
 2. **`/ticker/[symbol]` — Ticker Deep-Dive:** Interactive **TradingView Lightweight Charts** candlestick + volume chart, quarterly Revenue/Net Income/OCF trend cards, Altman Z / Beneish M indicators, and the **Top-3 SHAP Risk Reasons** card.
 3. **`/watchlist` — Personal Watchlist & Dividend Calendar:** Authenticated view (Auth.js / Google OAuth or Magic Link) managing watched tickers, upcoming IDX cum-date / payment-date calendar, `@ArthalaIDBot` one-click linking, and Mayar.id QRIS Pro upgrade button.
-4. **`/status` — Public System Health & Live Data Observability:** Live status page querying `pipeline_runs`, Kafka lag/replay heartbeats, latest MLflow production model version, quarantine row counts, and Evidently drift badge—acting as an instant live showcase for OCBC hiring managers.
+4. **`/status` — Public System Health & Live Data Observability:** Live status page querying `pipeline_runs`, Kafka lag/replay heartbeats, latest MLflow production model version, quarantine row counts, and Evidently drift badge—acting as an instant live showcase for users and technical reviewers.
 
 ---
 
@@ -366,13 +366,13 @@ arthala-id/
 │   ├── dbt/                        # dbt-duckdb project (staging -> silver -> gold marts/features)
 │   ├── ml/                         # LightGBM training, SHAP, MLflow registry, Evidently drift
 │   ├── replay/                     # 24/7 Kafka Historical IDX Tick & Disclosure Replay Producer
-│   └── airflow/                    # Portable Airflow DAG mirrors (OCBC orchestration showcase)
+│   └── airflow/                    # Portable Airflow DAG mirrors (enterprise orchestration showcase)
 ├── infra/
 │   ├── docker/
 │   │   └── docker-compose.local.yml # Local Postgres, Redpanda (Kafka-compatible), MinIO (R2-compatible)
 │   ├── coolify/
 │   │   └── docker-compose.prod.yml  # Production Coolify stack with strict memory limits
-│   ├── k8s/                        # k3s / Helm chart templates for api & worker (OCBC K8s showcase)
+│   ├── k8s/                        # k3s / Helm chart templates for api & worker (enterprise K8s showcase)
 │   ├── terraform/                  # IaC definitions for Cloudflare R2, Neon, and Aiven Kafka
 │   └── sql/
 │       └── ddl.sql                 # Idempotent Neon Postgres schema
@@ -385,7 +385,7 @@ arthala-id/
 ├── Justfile                        # Standardized local dev & test commands for Antigravity IDE
 ├── .pre-commit-config.yaml
 ├── .env.example
-└── README.md                       # Recruiter-ready overview + OCBC traceability table + live links
+└── README.md                       # Project overview + engineering traceability table + live links
 ```
 
 ### 9.2 GitHub Best Practices & CI/CD Blueprint

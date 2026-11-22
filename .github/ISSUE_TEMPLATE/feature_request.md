@@ -15,7 +15,7 @@ assignees: ["robitalhazmi"]
 ## Task.md mapping
 
 - Phase / task: <!-- e.g. Phase 3.4 or "new item" -->
-- OCBC pillar: <!-- e.g. Streaming / MLOps / Data quality / IaC -->
+- Engineering pillar: <!-- e.g. Streaming / MLOps / Data quality / IaC -->
 
 ## Acceptance criteria
 
