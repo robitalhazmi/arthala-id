@@ -1,0 +1,147 @@
+# =============================================================================
+# Arthala ID — LOCAL offline sandbox (NOT for production / Coolify VPS)
+#
+#   postgres  -> emulates Neon Serverless Postgres     localhost:5432
+#   minio     -> emulates Cloudflare R2 (S3 API)       localhost:9000 (console :9001)
+#   redpanda  -> emulates Aiven Kafka (single node)    localhost:9092
+#   console   -> Redpanda Console (topic browser)      localhost:8080
+#
+# One-shot init jobs create the `arthala-lakehouse` bucket and the Kafka topics.
+# Postgres auto-applies infra/sql/ddl.sql on first boot of a fresh volume.
+#
+# Usage:  just up | just down | just nuke
+#   or    docker compose -f infra/docker/docker-compose.local.yml up -d
+# (`up --wait` across ALL services exits 1 because the one-shot init jobs exit;
+#  `just up` waits on long-running services and runs the init jobs separately.)
+#
+# Ports bind to 127.0.0.1 only. Credentials are local-only defaults that mirror
+# .env.example; override them via a local `.env` file.
+# =============================================================================
+name: arthala-local
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16.16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arthala}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-arthala}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../sql/ddl.sql:/docker-entrypoint-initdb.d/001_ddl.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+    logging: *default-logging
+
+  minio:
+    # The official minio/minio image is no longer published on Docker Hub.
+    # Chainguard's free, source-built MinIO image is used instead, pinned by digest.
+    image: cgr.dev/chainguard/minio@sha256:e9cf6b99c226e9539ed0f14b6f00e37b07da153c7ba1f4f8709c807574b471ec
+    restart: unless-stopped
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-arthala}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password}
+      # Used only by the healthcheck's bundled `mc` client
+      MC_HOST_local: http://${MINIO_ROOT_USER:-arthala}:${MINIO_ROOT_PASSWORD:-password}@localhost:9000
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+    logging: *default-logging
+
+  minio-init:
+    image: cgr.dev/chainguard/minio-client@sha256:94433f625c8057d18c69675dbaa33da6e4864f084f9c44faf30d3eb8e3754e0b
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      # mc reads alias credentials from MC_HOST_<alias>
+      MC_HOST_local: http://${MINIO_ROOT_USER:-arthala}:${MINIO_ROOT_PASSWORD:-password}@minio:9000
+    entrypoint: ["/usr/bin/mc"]
+    command: ["mb", "--ignore-existing", "local/${R2_BUCKET:-arthala-lakehouse}"]
+    restart: "no"
+    mem_limit: 128m
+    logging: *default-logging
+
+  redpanda:
+    image: redpandadata/redpanda:v26.3.1
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --default-log-level=warn
+      - --kafka-addr=internal://0.0.0.0:29092,external://0.0.0.0:9092
+      - --advertise-kafka-addr=internal://redpanda:29092,external://localhost:9092
+    ports:
+      - "127.0.0.1:9092:9092"
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    mem_limit: 1g
+    logging: *default-logging
+
+  redpanda-init:
+    image: redpandadata/redpanda:v26.3.1
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        for topic in idx.ticks.raw idx.disclosures.raw alerts.dispatch user.subscription.updated; do
+          if rpk topic describe "$$topic" -X brokers=redpanda:29092 >/dev/null 2>&1; then
+            echo "topic $$topic already exists"
+          else
+            rpk topic create "$$topic" --partitions 3 --replicas 1 -X brokers=redpanda:29092
+          fi
+        done
+    restart: "no"
+    mem_limit: 128m
+    logging: *default-logging
+
+  redpanda-console:
+    image: redpandadata/console:v3.15.0
+    restart: unless-stopped
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKERS: redpanda:29092
+    ports:
+      - "127.0.0.1:8080:8080"
+    mem_limit: 256m
+    logging: *default-logging
+
+volumes:
+  postgres-data:
+  minio-data:
+  redpanda-data:

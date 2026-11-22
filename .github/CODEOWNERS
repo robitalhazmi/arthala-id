@@ -1,0 +1,10 @@
+# Arthala ID — code ownership (by Robit Al Hazmi)
+# Every path requires review from the repository owner.
+*                                   @robitalhazmi
+
+# Guardrail-critical paths (explicit for clarity)
+/AGENTS.md                          @robitalhazmi
+/infra/                             @robitalhazmi
+/infra/sql/ddl.sql                  @robitalhazmi
+/.github/                           @robitalhazmi
+/apps/api/app/routers/webhooks*     @robitalhazmi

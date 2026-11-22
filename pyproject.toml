@@ -1,0 +1,97 @@
+[project]
+name = "arthala-id"
+version = "0.1.0"
+description = "Arthala ID by Robit Al Hazmi — IDX Fundamental, Dividend & MLOps Intelligence Platform"
+readme = "docs/Implementation_Plan.md"
+authors = [{ name = "Robit Al Hazmi", email = "robitalhazmi@gmail.com" }]
+license = { text = "MIT" }
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies are added per phase via dependency groups (api, worker,
+# pipelines, ml) so each Dockerfile installs only what it needs and the
+# arthala-worker image stays inside its 250m VPS memory cap.
+dependencies = []
+
+[tool.uv]
+# Virtual project: `apps/` and `pipelines/` are importable from the repo root
+# (e.g. `apps.api.app.main:app`, `pipelines.ingestion.runner`).
+package = false
+
+# -----------------------------------------------------------------------------
+# Ruff — lint + format
+# -----------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["."]
+extend-exclude = [
+    "apps/web",
+    "pipelines/dbt/target",
+    "pipelines/dbt/dbt_packages",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "N",     # pep8-naming
+    "S",     # flake8-bandit (security)
+    "ASYNC", # flake8-async (never block the event loop)
+    "T20",   # flake8-print (no print() in application code — use structlog)
+    "RUF",   # ruff-specific
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101"] # assert is idiomatic in pytest
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "pipelines"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+# -----------------------------------------------------------------------------
+# Mypy — strict typing
+# -----------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+pretty = true
+show_error_codes = true
+exclude = ["^apps/web/", "^pipelines/dbt/"]
+
+# -----------------------------------------------------------------------------
+# Pytest + coverage
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+pythonpath = ["."]
+testpaths = ["tests", "apps/api/tests", "apps/worker/tests", "pipelines"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+xfail_strict = true
+
+[tool.coverage.run]
+source = ["apps", "pipelines"]
+omit = ["apps/web/*", "*/tests/*"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.6",
+]
