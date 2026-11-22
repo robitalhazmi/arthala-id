@@ -1,0 +1,12 @@
+{
+  "name": "arthala-id",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --experimental-strip-types -e \"import('./neon.ts').then((m) => { if (!m.default) process.exit(1); console.log('neon.ts config validated successfully'); })\""
+  },
+  "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9"
+  }
+}

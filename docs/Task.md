@@ -9,13 +9,14 @@
 - [x] **0.1 GitHub Repo Bootstrap:** Create public repository `arthala-id`, configure `main` branch protection rules, squash-merge only, `CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, `ISSUE_TEMPLATE/`, and `dependabot.yml`.
 - [x] **0.2 Monorepo Skeleton & Tooling:** Initialize `uv` Python 3.12 workspace (`pyproject.toml`), `ruff`, `mypy`, `pytest`, `.pre-commit-config.yaml`, `Justfile`, and `.env.example`.
 - [x] **0.3 Local Sandbox Compose:** Create `infra/docker/docker-compose.local.yml` with local Postgres 16, MinIO (S3/R2 emulator), and Redpanda (single-node Kafka emulator) so all development works offline in Antigravity IDE.
-- [ ] **0.4 Provision Free Cloud Services:**
-  - [ ] Cloudflare R2 bucket (`arthala-lakehouse`) + API token.
-  - [ ] Neon Postgres project (`arthala-prod`) + execute `infra/sql/ddl.sql`.
-  - [ ] Aiven for Apache Kafka free tier service + create topics (`idx.ticks.raw`, `idx.disclosures.raw`, `alerts.dispatch`, `user.subscription.updated`).
-  - [ ] Grafana Cloud free stack + obtain remote-write metrics/logs credentials.
-  - [ ] Telegram Bot via `@BotFather` (`@ArthalaIDBot`) + bot token.
-  - [ ] Mayar.id individual account + create **Arthala ID Pro** monthly Payment Link (Rp39.000) + webhook secret.
+- [ ] **0.4 Provision Free Cloud Services (100% No-Credit-Card Free Tiers):**
+  - *Progress:* automated provisioning & verification runner (`pipelines/ingestion/cloud_bootstrap.py` + `just cloud-check`) implemented to create/verify `arthala-lakehouse` S3 bucket (Backblaze B2 / Supabase S3 / R2), apply `infra/sql/ddl.sql` to Neon Postgres via `psycopg` (no host `psql` needed), verify Aiven Kafka SSL/topics, Grafana Cloud remote-write endpoints, Telegram `@ArthalaIDBot` `getMe`, and Mayar.id QRIS webhook settings; pending live cloud account tokens in `.env` / GitHub Secrets.
+  - [x] S3-Compatible Lakehouse Bucket (`arthala-lakehouse`, private, `s3.us-east-005.backblazeb2.com`) + S3 Application Keys via **Backblaze B2 Free (10 GB, no credit card)** — verified live & stored in GitHub Actions Secrets (`R2_*`).
+  - [x] **Neon Postgres Free** project (`falling-brook-19498331`, branch `production`, no credit card) + executed `infra/sql/ddl.sql` via `DATABASE_URL_UNPOOLED` and verified all 8 serving tables over pooled `DATABASE_URL` (`just cloud-check prod`, stored in GitHub Actions Secrets).
+  - [x] **Aiven for Apache Kafka Free** service (`arthala-kafka-arthala-id.h.aivencloud.com:26713`, mTLS `SSL`, no credit card) + verified all 4 topics x 2 partitions (`idx.ticks.raw`, `idx.disclosures.raw`, `alerts.dispatch`, `user.subscription.updated`) and stored credentials in GitHub Actions Secrets (`KAFKA_*`).
+  - [x] **Grafana Cloud Free** stack (`prometheus-prod-52-prod-ap-southeast-2.grafana.net` & `logs-prod-032.grafana.net/loki/api/v1/push`, no credit card) + verified live Loki `204` log push & Prometheus remote-write auth and stored credentials in GitHub Actions Secrets (`GRAFANA_*`).
+  - [x] **Telegram Bot** via `@BotFather` (`@ArthalaIDBot`, no credit card) + verified live via Telegram `getMe`, configured bot description/commands, and stored `TELEGRAM_BOT_TOKEN` in GitHub Actions Secrets.
+  - [ ] **Mayar.id** individual account (no credit card; Indonesian KTP/local bank) + create **Arthala ID Pro** monthly Payment Link (Rp39.000) + webhook secret.
 - [ ] **0.5 Harden Coolify VPS (1 vCPU / 2 GB):** Enable 2 GB Linux swap file, verify Coolify dashboard health, and configure GitHub App deployment link.
 - [x] **0.6 Baseline CI Pipeline:** Add `.github/workflows/ci.yml` (Python lint/type/test + Next.js lint/build + gitleaks) and verify first green PR.
 

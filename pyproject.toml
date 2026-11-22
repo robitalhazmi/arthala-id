@@ -46,8 +46,8 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**/*.py" = ["S101"] # assert is idiomatic in pytest
-"tests/**/*.py" = ["S101"]
+"**/tests/**/*.py" = ["S101", "S105", "S106"] # assert & synthetic test inputs in pytest
+"tests/**/*.py" = ["S101", "S105", "S106"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "pipelines"]
@@ -103,9 +103,11 @@ dev = [
 ]
 pipelines = [
     "boto3>=1.44.9",
+    "httpx>=0.28.1",
     "pandas>=3.1.1",
     "pandera>=0.36.0",
     "prometheus-client>=0.26.0",
+    "psycopg[binary]>=3.3.9",
     "pyarrow>=26.0.1",
     "pydantic>=2.14.4",
     "pydantic-settings>=2.16.3",

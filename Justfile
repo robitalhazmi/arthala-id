@@ -56,6 +56,11 @@ logs service="":
 db-init:
     {{ compose_local }} exec -T postgres psql -v ON_ERROR_STOP=1 -U {{ pg_user }} -d {{ pg_db }} < infra/sql/ddl.sql
 
+# Verify local sandbox or production free cloud services (Task 0.4) and apply DDL via Python psycopg
+[group('sandbox')]
+cloud-check env="local":
+    uv run python -m pipelines.ingestion.cloud_bootstrap --env {{ env }} --ensure-bucket
+
 # Open a psql shell on LOCAL Postgres
 [group('sandbox')]
 psql:
