@@ -7,7 +7,7 @@
 
 ## Phase 0: Repository Governance, Cloud Free Tiers & Antigravity Local Dev
 - [ ] **0.1 GitHub Repo Bootstrap:** Create public repository `arthala-id`, configure `main` branch protection rules, squash-merge only, `CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, `ISSUE_TEMPLATE/`, and `dependabot.yml`.
-  - *Progress:* repo files (`CODEOWNERS`, PR/issue templates, `dependabot.yml`) committed on `chore/phase-0-bootstrap`; pending GitHub repo creation, branch protection & squash-merge settings.
+  - *Progress:* public repo `robitalhazmi/arthala-id` created and governance files (`CODEOWNERS`, PR/issue templates, `dependabot.yml`) committed; pending `main` branch protection & squash-merge settings.
 - [x] **0.2 Monorepo Skeleton & Tooling:** Initialize `uv` Python 3.12 workspace (`pyproject.toml`), `ruff`, `mypy`, `pytest`, `.pre-commit-config.yaml`, `Justfile`, and `.env.example`.
 - [x] **0.3 Local Sandbox Compose:** Create `infra/docker/docker-compose.local.yml` with local Postgres 16, MinIO (S3/R2 emulator), and Redpanda (single-node Kafka emulator) so all development works offline in Antigravity IDE.
 - [ ] **0.4 Provision Free Cloud Services:**
@@ -18,8 +18,7 @@
   - [ ] Telegram Bot via `@BotFather` (`@ArthalaIDBot`) + bot token.
   - [ ] Mayar.id individual account + create **Arthala ID Pro** monthly Payment Link (Rp39.000) + webhook secret.
 - [ ] **0.5 Harden Coolify VPS (1 vCPU / 2 GB):** Enable 2 GB Linux swap file, verify Coolify dashboard health, and configure GitHub App deployment link.
-- [ ] **0.6 Baseline CI Pipeline:** Add `.github/workflows/ci.yml` (Python lint/type/test + Next.js lint/build + gitleaks) and verify first green PR.
-  - *Progress:* `ci.yml` committed (`python-ci`, `dbt-ci`, `web-ci`, `compose-validate`, `gitleaks`; actionlint clean); pending first green PR on GitHub.
+- [x] **0.6 Baseline CI Pipeline:** Add `.github/workflows/ci.yml` (Python lint/type/test + Next.js lint/build + gitleaks) and verify first green PR.
 
 ---
 
