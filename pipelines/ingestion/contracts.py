@@ -1,11 +1,13 @@
-"""Pandera data quality contracts and Cloudflare R2 Quarantine/DLQ writer.
+"""Pandera data quality contracts and S3/R2/B2 Quarantine/DLQ writer.
 
-Implements Section 5.1 & 5.2 of ``docs/Implementation_Plan.md``:
-- ``PriceSchema`` (daily IDX OHLCV market rows)
-- ``FinancialReportSchema`` (quarterly IDX fundamental financial statements)
-- ``CorporateActionSchema`` (dividend & corporate action calendar rows)
-- ``QuarantineWriter`` & ``validate_and_quarantine`` (routes malformed rows to
-  ``r2://arthala-lakehouse/quarantine/{source}/dt=YYYY-MM-DD/run_{run_id}_errors.parquet``
+Implements Section 5.1 & 5.2 of ``docs/Implementation_Plan.md`` (Task 1.1):
+- ``PriceSchema`` (daily IDX OHLCV market rows with finite & cross-column OHLC checks)
+- ``FinancialReportSchema`` (quarterly IDX fundamental financial statements with
+  filing_date chronology & distressed negative-equity support)
+- ``CorporateActionSchema`` (dividend & corporate action calendar rows supporting
+  both cash dividends and stock splits / rights / bonus shares)
+- ``QuarantineWriter`` & ``validate_and_quarantine`` (automatically routes malformed
+  rows to ``r2://arthala-lakehouse/quarantine/{source}/dt=YYYY-MM-DD/run_{run_id}_errors.parquet``
   with failure metadata and increments ``ingestion_quarantine_rows_total``).
 """
 
@@ -19,9 +21,11 @@ from datetime import UTC, date, datetime
 from typing import Any, Protocol
 
 import boto3
+import numpy as np
 import pandas as pd
 import pandera.pandas as pa
 import structlog
+from botocore.config import Config as BotoConfig
 from prometheus_client import Counter
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,13 +36,13 @@ IDX_TICKER_REGEX = r"^[A-Z]{4}$"
 
 INGESTION_QUARANTINE_ROWS_TOTAL = Counter(
     "ingestion_quarantine_rows_total",
-    "Total malformed ingestion rows routed to Cloudflare R2 Quarantine/DLQ",
+    "Total malformed ingestion rows routed to Lakehouse Quarantine/DLQ",
     labelnames=("source", "schema"),
 )
 
 
 class R2StorageSettings(BaseSettings):
-    """Cloudflare R2 / local MinIO S3-compatible object storage configuration."""
+    """S3-compatible Lakehouse storage configuration (Backblaze B2 / R2 / local MinIO)."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -54,7 +58,7 @@ class R2StorageSettings(BaseSettings):
 
 
 class S3ClientProtocol(Protocol):
-    """Minimal S3 client protocol for uploading Parquet objects to R2/MinIO."""
+    """Minimal S3 client protocol for uploading Parquet objects to B2/R2/MinIO."""
 
     def put_object(
         self,
@@ -82,6 +86,22 @@ class ContractValidationResult:
     quarantine_uri: str | None
 
 
+def _check_finite_numeric(series: pd.Series[Any]) -> pd.Series[bool]:
+    """Reject +/-Infinity values while ignoring NaNs (handled by nullable=False/True)."""
+    numeric = pd.to_numeric(series, errors="coerce")
+    is_na = numeric.isna()
+    arr = numeric.to_numpy(dtype=float, na_value=0.0)
+    finite = pd.Series(np.isfinite(arr), index=series.index, dtype=bool)
+    return (finite | is_na).astype(bool)
+
+
+FINITE_CHECK = pa.Check(
+    _check_finite_numeric,
+    name="is_finite",
+    error="Numeric values must be finite (not +/-inf)",
+)
+
+
 def _check_ohlc_bounds(df: pd.DataFrame) -> pd.Series[bool]:
     """Verify high >= max(open, close, low) and low <= min(open, close, high)."""
     required = {"open_price", "high_price", "low_price", "close_price"}
@@ -104,8 +124,20 @@ def _check_ohlc_bounds(df: pd.DataFrame) -> pd.Series[bool]:
     return (bounds_ok | any_na).astype(bool)
 
 
+def _check_filing_date_chronology(df: pd.DataFrame) -> pd.Series[bool]:
+    """Ensure filing_date year is not earlier than fiscal_year (prevents ML leakage)."""
+    if "filing_date" not in df.columns or "fiscal_year" not in df.columns:
+        return pd.Series(False, index=df.index, dtype=bool)
+
+    filing = pd.to_datetime(df["filing_date"], errors="coerce")
+    fy = pd.to_numeric(df["fiscal_year"], errors="coerce")
+    any_na = filing.isna() | fy.isna()
+    chronology_ok = filing.dt.year >= fy
+    return (chronology_ok | any_na).astype(bool)
+
+
 def _check_dividend_date_order(df: pd.DataFrame) -> pd.Series[bool]:
-    """Verify ex_date >= cum_date and payment_date >= cum_date when present."""
+    """Verify ex_date >= cum_date, recording_date >= cum_date, payment_date >= cum_date."""
     if "cum_date" not in df.columns:
         return pd.Series(False, index=df.index, dtype=bool)
 
@@ -127,6 +159,23 @@ def _check_dividend_date_order(df: pd.DataFrame) -> pd.Series[bool]:
     return ok.astype(bool)
 
 
+def _check_corporate_action_amount(df: pd.DataFrame) -> pd.Series[bool]:
+    """Require dividend_per_share > 0 for CASH_DIVIDEND (or default) rows."""
+    if "dividend_per_share" not in df.columns:
+        return pd.Series(False, index=df.index, dtype=bool)
+
+    dps = pd.to_numeric(df["dividend_per_share"], errors="coerce")
+    if "action_type" in df.columns:
+        act = df["action_type"]
+        is_cash_div = act.isna() | (act.astype(str) == "CASH_DIVIDEND")
+    else:
+        is_cash_div = pd.Series(True, index=df.index, dtype=bool)
+
+    cash_ok = (~is_cash_div) | (dps.notna() & (dps > 0))
+    non_cash_ok = is_cash_div | dps.isna() | (dps >= 0)
+    return (cash_ok & non_cash_ok).astype(bool)
+
+
 PriceSchema = pa.DataFrameSchema(
     name="PriceSchema",
     columns={
@@ -143,25 +192,25 @@ PriceSchema = pa.DataFrameSchema(
         ),
         "open_price": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=False,
             coerce=True,
         ),
         "high_price": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=False,
             coerce=True,
         ),
         "low_price": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=False,
             coerce=True,
         ),
         "close_price": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=False,
             coerce=True,
         ),
@@ -173,7 +222,7 @@ PriceSchema = pa.DataFrameSchema(
         ),
         "adj_close": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=True,
             required=False,
             coerce=True,
@@ -225,71 +274,78 @@ FinancialReportSchema = pa.DataFrameSchema(
         ),
         "revenue_idr": pa.Column(
             float,
-            checks=pa.Check.ge(0),
+            checks=[FINITE_CHECK, pa.Check.ge(0)],
             nullable=False,
             coerce=True,
         ),
         "net_income_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=False,
             coerce=True,
         ),
         "operating_cf_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=False,
             coerce=True,
         ),
         "total_assets_idr": pa.Column(
             float,
-            checks=pa.Check.gt(0),
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
             nullable=False,
             coerce=True,
         ),
         "total_liabilities_idr": pa.Column(
             float,
-            checks=pa.Check.ge(0),
+            checks=[FINITE_CHECK, pa.Check.ge(0)],
             nullable=False,
             coerce=True,
         ),
         "total_equity_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=False,
             coerce=True,
         ),
         "short_term_debt_idr": pa.Column(
             float,
-            checks=pa.Check.ge(0),
+            checks=[FINITE_CHECK, pa.Check.ge(0)],
             nullable=True,
             required=False,
             coerce=True,
         ),
         "cash_and_equivalents_idr": pa.Column(
             float,
-            checks=pa.Check.ge(0),
+            checks=[FINITE_CHECK, pa.Check.ge(0)],
             nullable=True,
             required=False,
             coerce=True,
         ),
         "retained_earnings_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=True,
             required=False,
             coerce=True,
         ),
         "ebit_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=True,
             required=False,
             coerce=True,
         ),
         "working_capital_idr": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=True,
             required=False,
             coerce=True,
         ),
         "eps": pa.Column(
             float,
+            checks=FINITE_CHECK,
             nullable=True,
             required=False,
             coerce=True,
@@ -302,6 +358,13 @@ FinancialReportSchema = pa.DataFrameSchema(
             coerce=True,
         ),
     },
+    checks=[
+        pa.Check(
+            _check_filing_date_chronology,
+            name="filing_date_not_before_fiscal_year",
+            error="filing_date year must be >= fiscal_year",
+        )
+    ],
     strict=False,
 )
 
@@ -332,15 +395,22 @@ CorporateActionSchema = pa.DataFrameSchema(
         ),
         "fiscal_year": pa.Column(
             float,
-            checks=pa.Check.in_range(2000, 2100),
+            checks=[FINITE_CHECK, pa.Check.in_range(2000, 2100)],
             nullable=True,
             required=False,
             coerce=True,
         ),
         "dividend_per_share": pa.Column(
             float,
-            checks=pa.Check.gt(0),
-            nullable=False,
+            checks=[FINITE_CHECK, pa.Check.ge(0)],
+            nullable=True,
+            coerce=True,
+        ),
+        "split_ratio": pa.Column(
+            float,
+            checks=[FINITE_CHECK, pa.Check.gt(0)],
+            nullable=True,
+            required=False,
             coerce=True,
         ),
         "currency": pa.Column(
@@ -375,7 +445,7 @@ CorporateActionSchema = pa.DataFrameSchema(
         ),
         "payout_ratio_pct": pa.Column(
             float,
-            checks=pa.Check.in_range(0.0, 1000.0),
+            checks=[FINITE_CHECK, pa.Check.in_range(0.0, 1000.0)],
             nullable=True,
             required=False,
             coerce=True,
@@ -386,14 +456,19 @@ CorporateActionSchema = pa.DataFrameSchema(
             _check_dividend_date_order,
             name="dividend_date_order_valid",
             error="ex_date, recording_date, and payment_date must be >= cum_date",
-        )
+        ),
+        pa.Check(
+            _check_corporate_action_amount,
+            name="corporate_action_amount_valid",
+            error="CASH_DIVIDEND rows must provide dividend_per_share > 0",
+        ),
     ],
     strict=False,
 )
 
 
 class QuarantineWriter:
-    """Writes quarantined/DLQ rows as Parquet to Cloudflare R2 / local MinIO."""
+    """Writes quarantined/DLQ rows as Parquet to S3-compatible Lakehouse (B2/R2/MinIO)."""
 
     def __init__(
         self,
@@ -405,24 +480,30 @@ class QuarantineWriter:
 
     @property
     def bucket(self) -> str:
-        """Return target R2/MinIO bucket name."""
+        """Return target Lakehouse S3 bucket name."""
         return self._settings.r2_bucket
 
     def _get_client(self) -> S3ClientProtocol:
         if self._s3_client is None:
+            boto_cfg = BotoConfig(
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
+                retries={"max_attempts": 3, "mode": "standard"},
+            )
             client: S3ClientProtocol = boto3.client(
                 "s3",
                 endpoint_url=self._settings.r2_endpoint_url,
                 aws_access_key_id=self._settings.r2_access_key_id,
                 aws_secret_access_key=self._settings.r2_secret_access_key,
                 region_name=self._settings.r2_region,
+                config=boto_cfg,
             )
             self._s3_client = client
         return self._s3_client
 
     @staticmethod
     def build_quarantine_key(source_name: str, partition_date: date, run_id: str) -> str:
-        """Construct the canonical R2 quarantine Parquet key (§5.2)."""
+        """Construct the canonical Lakehouse quarantine Parquet key (§5.2)."""
         clean_source = source_name.strip("/").replace(" ", "_")
         dt_part = partition_date.isoformat()
         return f"quarantine/{clean_source}/dt={dt_part}/run_{run_id}_errors.parquet"
@@ -435,7 +516,7 @@ class QuarantineWriter:
         partition_date: date,
         run_id: str,
     ) -> tuple[str, str]:
-        """Serialize ``quarantine_df`` to Parquet and upload to R2/MinIO.
+        """Serialize ``quarantine_df`` to Parquet and upload to B2/R2/MinIO.
 
         Returns ``(quarantine_key, quarantine_uri)``.
         """
@@ -480,9 +561,9 @@ def _json_default(value: Any) -> Any:
 def _collect_failures_by_index(
     df: pd.DataFrame,
     failure_cases: pd.DataFrame,
-) -> tuple[dict[Any, list[dict[str, Any]]], list[dict[str, Any]]]:
-    """Group Pandera failure cases into row-specific errors and schema-level errors."""
-    per_row: dict[Any, list[dict[str, Any]]] = {}
+) -> tuple[dict[int, list[dict[str, Any]]], list[dict[str, Any]]]:
+    """Group Pandera failure cases into positional row errors and schema-level errors."""
+    per_row: dict[int, list[dict[str, Any]]] = {}
     schema_wide: list[dict[str, Any]] = []
     valid_index_set = set(df.index)
 
@@ -497,7 +578,7 @@ def _collect_failures_by_index(
             ),
         }
         if raw_idx is not None and not pd.isna(raw_idx) and raw_idx in valid_index_set:
-            per_row.setdefault(raw_idx, []).append(entry)
+            per_row.setdefault(int(raw_idx), []).append(entry)
         else:
             schema_wide.append(entry)
 
@@ -507,7 +588,8 @@ def _collect_failures_by_index(
 def _build_quarantine_df(
     raw_rows: pd.DataFrame,
     *,
-    failures_by_index: dict[Any, list[dict[str, Any]]],
+    original_indices: list[Any],
+    failures_by_pos: dict[int, list[dict[str, Any]]],
     default_failures: list[dict[str, Any]],
     source_name: str,
     schema_name: str,
@@ -516,16 +598,25 @@ def _build_quarantine_df(
 ) -> pd.DataFrame:
     """Create a Parquet-safe quarantine DataFrame with failure metadata and raw JSON payload."""
     records: list[dict[str, Any]] = []
-    for idx, row in raw_rows.iterrows():
-        row_dict = {str(col): (None if pd.isna(val) else val) for col, val in row.to_dict().items()}
-        reasons = failures_by_index.get(idx, default_failures)
+    for pos, (_, row) in enumerate(raw_rows.iterrows()):
+        pos_key = int(raw_rows.index[pos])
+        orig_label = original_indices[pos]
+        row_dict: dict[str, Any] = {}
+        for col, val in row.to_dict().items():
+            if pd.isna(val):
+                row_dict[str(col)] = None
+            elif isinstance(val, float) and not np.isfinite(val):
+                row_dict[str(col)] = str(val)
+            else:
+                row_dict[str(col)] = val
+        reasons = failures_by_pos.get(pos_key, default_failures)
         records.append(
             {
                 "run_id": run_id,
                 "source_name": source_name,
                 "schema_name": schema_name,
                 "quarantined_at": quarantined_at,
-                "row_index": str(idx),
+                "row_index": str(orig_label),
                 "failure_reasons": json.dumps(reasons, default=_json_default, sort_keys=True),
                 "raw_payload": json.dumps(row_dict, default=_json_default, sort_keys=True),
             }
@@ -552,15 +643,18 @@ def validate_and_quarantine(
     run_id: str | None = None,
     partition_date: date | None = None,
     quarantine_writer: QuarantineWriter | None = None,
+    auto_write_quarantine: bool = True,
 ) -> ContractValidationResult:
-    """Validate ``df`` against ``schema`` and route invalid rows to Quarantine/DLQ.
+    """Validate ``df`` against ``schema`` and automatically write bad rows to Quarantine/DLQ.
 
     Guarantees:
-    - No row is ever silently dropped: ``rows_valid + rows_quarantined == rows_processed``.
+    - No row is ever silently dropped: ``rows_valid + rows_quarantined == rows_processed``
+      (even when ``df`` has non-unique indices from ``pd.concat``).
     - ``valid_df`` has passed ``schema.validate(..., lazy=True)`` with coerced types.
     - When ``rows_quarantined > 0``, ``ingestion_quarantine_rows_total`` is incremented
-      and (when ``quarantine_writer`` is provided) ``quarantine_df`` is written to
-      ``r2://arthala-lakehouse/quarantine/{source_name}/dt=YYYY-MM-DD/run_{run_id}_errors.parquet``.
+      and ``quarantine_df`` is automatically written to
+      ``r2://arthala-lakehouse/quarantine/{source_name}/dt=YYYY-MM-DD/run_{run_id}_errors.parquet``
+      (unless ``auto_write_quarantine=False`` is explicitly requested for dry-run checks).
     """
     resolved_run_id = run_id or uuid.uuid4().hex
     resolved_date = partition_date or datetime.now(tz=UTC).date()
@@ -570,7 +664,8 @@ def validate_and_quarantine(
     if df.empty:
         empty_quarantine = _build_quarantine_df(
             df,
-            failures_by_index={},
+            original_indices=[],
+            failures_by_pos={},
             default_failures=[],
             source_name=source_name,
             schema_name=schema_name,
@@ -590,41 +685,45 @@ def validate_and_quarantine(
             quarantine_uri=None,
         )
 
-    all_failures_by_index: dict[Any, list[dict[str, Any]]] = {}
-    schema_wide_failures: list[dict[str, Any]] = []
-    candidate_df = df.copy()
-    valid_df: pd.DataFrame | None = None
+    original_index_list = list(df.index)
+    work_df = df.reset_index(drop=True)
 
-    for _ in range(3):
-        if candidate_df.empty:
-            valid_df = candidate_df
-            break
+    all_failures_by_pos: dict[int, list[dict[str, Any]]] = {}
+    schema_wide_failures: list[dict[str, Any]] = []
+    candidate_df = work_df.copy()
+    validated_work_df: pd.DataFrame | None = None
+
+    while not candidate_df.empty:
         try:
-            valid_df = schema.validate(candidate_df, lazy=True)
+            validated_work_df = schema.validate(candidate_df, lazy=True)
             break
         except pa.errors.SchemaErrors as exc:
             per_row, schema_wide = _collect_failures_by_index(candidate_df, exc.failure_cases)
             if not per_row:
                 schema_wide_failures.extend(schema_wide)
-                for idx in candidate_df.index:
-                    all_failures_by_index.setdefault(idx, []).extend(schema_wide)
-                valid_df = candidate_df.iloc[0:0].copy()
+                for pos_idx in candidate_df.index:
+                    all_failures_by_pos.setdefault(int(pos_idx), []).extend(schema_wide)
+                validated_work_df = candidate_df.iloc[0:0].copy()
                 break
 
-            for idx, reasons in per_row.items():
-                all_failures_by_index.setdefault(idx, []).extend(reasons)
+            for pos_idx, reasons in per_row.items():
+                all_failures_by_pos.setdefault(pos_idx, []).extend(reasons)
             candidate_df = candidate_df.drop(index=list(per_row.keys()))
 
-    if valid_df is None:
-        for idx in candidate_df.index:
-            all_failures_by_index.setdefault(idx, []).extend(schema_wide_failures)
-        valid_df = candidate_df.iloc[0:0].copy()
+    if validated_work_df is None:
+        validated_work_df = candidate_df.iloc[0:0].copy()
 
-    bad_index_list = [idx for idx in df.index if idx in all_failures_by_index]
-    raw_bad_rows = df.loc[bad_index_list]
+    valid_positions = [int(i) for i in validated_work_df.index]
+    valid_df = validated_work_df.copy()
+    valid_df.index = pd.Index([original_index_list[i] for i in valid_positions])
+
+    bad_positions = [pos for pos in range(len(work_df)) if pos in all_failures_by_pos]
+    raw_bad_rows = work_df.loc[bad_positions]
+    bad_orig_indices = [original_index_list[pos] for pos in bad_positions]
     quarantine_df = _build_quarantine_df(
         raw_bad_rows,
-        failures_by_index=all_failures_by_index,
+        original_indices=bad_orig_indices,
+        failures_by_pos=all_failures_by_pos,
         default_failures=schema_wide_failures,
         source_name=source_name,
         schema_name=schema_name,
@@ -642,8 +741,12 @@ def validate_and_quarantine(
         INGESTION_QUARANTINE_ROWS_TOTAL.labels(source=source_name, schema=schema_name).inc(
             rows_quarantined
         )
-        if quarantine_writer is not None:
-            quarantine_key, quarantine_uri = quarantine_writer.write_quarantine_dataframe(
+        writer = quarantine_writer
+        if writer is None and auto_write_quarantine:
+            writer = QuarantineWriter()
+
+        if writer is not None:
+            quarantine_key, quarantine_uri = writer.write_quarantine_dataframe(
                 quarantine_df,
                 source_name=source_name,
                 partition_date=resolved_date,
@@ -651,7 +754,7 @@ def validate_and_quarantine(
             )
         else:
             logger.warning(
-                "ingestion.rows_quarantined",
+                "ingestion.rows_quarantined_dry_run",
                 source_name=source_name,
                 schema_name=schema_name,
                 run_id=resolved_run_id,
