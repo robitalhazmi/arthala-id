@@ -49,7 +49,7 @@ services:
   minio:
     # The official minio/minio image is no longer published on Docker Hub.
     # Chainguard's free, source-built MinIO image is used instead, pinned by digest.
-    image: cgr.dev/chainguard/minio@sha256:e9cf6b99c226e9539ed0f14b6f00e37b07da153c7ba1f4f8709c807574b471ec
+    image: cgr.dev/chainguard/minio@sha256:548147b5fc95a67e3e45285dff7e0e50326c3eb1977c6218039461771156c5e7
     restart: unless-stopped
     command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
     environment:
@@ -71,7 +71,7 @@ services:
     logging: *default-logging
 
   minio-init:
-    image: cgr.dev/chainguard/minio-client@sha256:94433f625c8057d18c69675dbaa33da6e4864f084f9c44faf30d3eb8e3754e0b
+    image: cgr.dev/chainguard/minio-client@sha256:328ad584835c07ff4b28418aa54d9d9a83893b86bc543436c910359cca76ce19
     depends_on:
       minio:
         condition: service_healthy
