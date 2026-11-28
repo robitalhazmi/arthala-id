@@ -68,7 +68,7 @@ show_error_codes = true
 exclude = ["^apps/web/", "^pipelines/dbt/"]
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "pyarrow.*"]
+module = ["boto3.*", "botocore.*", "pyarrow.*", "yfinance.*", "curl_cffi.*"]
 ignore_missing_imports = true
 
 # -----------------------------------------------------------------------------
@@ -104,9 +104,11 @@ dev = [
 ]
 pipelines = [
     "boto3>=1.44.9",
+    "curl-cffi>=0.17.0",
     "httpx>=0.28.1",
     "pandas>=3.1.1",
     "pandera>=0.36.0",
+    "playwright>=1.65.2",
     "prometheus-client>=0.26.0",
     "psycopg[binary]>=3.3.9",
     "pyarrow>=26.0.1",
@@ -114,4 +116,5 @@ pipelines = [
     "pydantic-settings>=2.16.3",
     "pyyaml>=6.0.4",
     "structlog>=26.1.0",
+    "yfinance>=1.8.0",
 ]

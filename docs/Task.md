@@ -24,10 +24,10 @@
 
 ## Phase 1: Resilient Ingestion & Medallion Lakehouse (R2 + DuckDB + dbt)
 - [x] **1.1 Pandera Data Contracts & DLQ:** Implement `pipelines/ingestion/contracts.py` (`PriceSchema`, `FinancialReportSchema`, `CorporateActionSchema`) with automatic Quarantine/DLQ writer to `r2://arthala-lakehouse/quarantine/`.
-- [ ] **1.2 Multi-Source IDX & Market Scrapers:**
-  - [ ] EOD OHLCV + dividends collector (`yfinance` for `.JK` tickers with batching and retry backoff).
-  - [ ] IDX quarterly financials, disclosures & Notasi Khusus (FCA) collector (`curl_cffi` primary + Playwright fallback).
-  - [ ] Watermark tracking & idempotent writes to Bronze Parquet on R2 (`pipelines/ingestion/runner.py`).
+- [x] **1.2 Multi-Source IDX & Market Scrapers:**
+  - [x] EOD OHLCV + dividends collector (`yfinance` for `.JK` tickers with batching and retry backoff in `pipelines/ingestion/market_collector.py`).
+  - [x] IDX quarterly financials, disclosures & Notasi Khusus (FCA) collector (`curl_cffi` primary + Playwright fallback in `pipelines/ingestion/idx_collector.py`).
+  - [x] Watermark tracking & idempotent writes to Bronze Parquet on R2/B2 (`pipelines/ingestion/runner.py`).
 - [ ] **1.3 dbt-duckdb Silver & Gold Models:**
   - [ ] Configure `pipelines/dbt/profiles.yml` for local MinIO and production Cloudflare R2 via DuckDB `httpfs`.
   - [ ] Silver models: `dim_tickers`, `fct_daily_prices`, `fct_quarterly_financials`, `fct_corporate_actions`.

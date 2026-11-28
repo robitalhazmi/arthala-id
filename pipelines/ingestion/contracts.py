@@ -467,6 +467,115 @@ CorporateActionSchema = pa.DataFrameSchema(
 )
 
 
+DisclosureSchema = pa.DataFrameSchema(
+    name="DisclosureSchema",
+    columns={
+        "disclosure_id": pa.Column(
+            str,
+            checks=pa.Check.str_length(min_value=1),
+            nullable=False,
+            coerce=True,
+        ),
+        "ticker": pa.Column(
+            str,
+            checks=pa.Check.str_matches(IDX_TICKER_REGEX),
+            nullable=False,
+            coerce=True,
+        ),
+        "published_at": pa.Column(
+            pa.DateTime,
+            nullable=False,
+            coerce=True,
+        ),
+        "title": pa.Column(
+            str,
+            checks=pa.Check.str_length(min_value=1),
+            nullable=False,
+            coerce=True,
+        ),
+        "category": pa.Column(
+            str,
+            nullable=True,
+            required=False,
+            coerce=True,
+        ),
+        "attachment_url": pa.Column(
+            str,
+            nullable=True,
+            required=False,
+            coerce=True,
+        ),
+        "filing_hash": pa.Column(
+            str,
+            checks=pa.Check.str_matches(r"^[0-9a-f]{64}$"),
+            nullable=False,
+            coerce=True,
+        ),
+        "source": pa.Column(
+            str,
+            checks=pa.Check.isin(["idx", "playwright", "fixtures", "replay"]),
+            nullable=True,
+            required=False,
+            coerce=True,
+        ),
+    },
+    strict=False,
+)
+
+
+SpecialMonitoringSchema = pa.DataFrameSchema(
+    name="SpecialMonitoringSchema",
+    columns={
+        "ticker": pa.Column(
+            str,
+            checks=pa.Check.str_matches(IDX_TICKER_REGEX),
+            nullable=False,
+            coerce=True,
+        ),
+        "company_name": pa.Column(
+            str,
+            checks=pa.Check.str_length(min_value=1),
+            nullable=False,
+            coerce=True,
+        ),
+        "as_of_date": pa.Column(
+            pa.DateTime,
+            nullable=False,
+            coerce=True,
+        ),
+        "listing_board": pa.Column(
+            str,
+            checks=pa.Check.isin(["Main", "Development", "Acceleration", "Watchlist"]),
+            nullable=False,
+            coerce=True,
+        ),
+        "special_notations": pa.Column(
+            str,
+            nullable=False,
+            coerce=True,
+        ),
+        "is_fca_monitoring": pa.Column(
+            bool,
+            nullable=False,
+            coerce=True,
+        ),
+        "sector": pa.Column(
+            str,
+            nullable=True,
+            required=False,
+            coerce=True,
+        ),
+        "sub_sector": pa.Column(
+            str,
+            nullable=True,
+            required=False,
+            coerce=True,
+        ),
+    },
+    strict=False,
+)
+
+
 class QuarantineWriter:
     """Writes quarantined/DLQ rows as Parquet to S3-compatible Lakehouse (B2/R2/MinIO)."""
 
